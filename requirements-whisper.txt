@@ -1,0 +1,2 @@
+# Optional: real speech-to-text (STT_PROVIDER=faster_whisper). MIT-licensed. Downloads a model on first use.
+faster-whisper>=1.0

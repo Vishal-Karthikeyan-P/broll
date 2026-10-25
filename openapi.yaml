@@ -1,0 +1,458 @@
+openapi: 3.1.0
+info:
+  title: IncuBrix B-roll Engine
+  description: Turns a voiceover or script into a finished, licence-clean B-roll video.
+  version: 0.1.0
+paths:
+  /api/v1/broll/jobs:
+    post:
+      tags:
+      - jobs
+      summary: Create a B-roll job from audio_url, script or scenes
+      operationId: create_job_api_v1_broll_jobs_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateJobRequest'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreated'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Conflict
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unsupported Media Type
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Too Many Requests
+  /api/v1/broll/jobs/upload:
+    post:
+      tags:
+      - jobs
+      summary: Create a job from an uploaded audio file (mp3, wav, m4a)
+      operationId: create_job_upload_api_v1_broll_jobs_upload_post
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Idempotency-Key
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_create_job_upload_api_v1_broll_jobs_upload_post'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCreated'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Bad Request
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unauthorized
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Conflict
+        '415':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unsupported Media Type
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Unprocessable Entity
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Too Many Requests
+  /api/v1/jobs/{job_id}:
+    get:
+      tags:
+      - jobs
+      summary: Job status, progress and result links
+      operationId: get_job_api_v1_jobs__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/files/{key}:
+    get:
+      tags:
+      - files
+      summary: Download an output file (local storage only)
+      operationId: get_file_api_v1_files__key__get
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Key
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Not Found
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
+    get:
+      tags:
+      - ops
+      summary: ' Health'
+      operationId: _health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /ready:
+    get:
+      tags:
+      - ops
+      summary: ' Ready'
+      operationId: _ready_ready_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    Body_create_job_upload_api_v1_broll_jobs_upload_post:
+      properties:
+        file:
+          type: string
+          contentMediaType: application/octet-stream
+          title: File
+        options:
+          type: string
+          title: Options
+          default: '{}'
+        transcript_hint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Transcript Hint
+          description: Used only by the mock STT adapter.
+      type: object
+      required:
+      - file
+      title: Body_create_job_upload_api_v1_broll_jobs_upload_post
+    CaptionOptions:
+      properties:
+        burn_in:
+          type: boolean
+          title: Burn In
+          default: true
+        srt:
+          type: boolean
+          title: Srt
+          default: true
+      additionalProperties: false
+      type: object
+      title: CaptionOptions
+    CreateJobRequest:
+      properties:
+        audio_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Audio Url
+        script:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Script
+        scenes:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/SceneIn'
+            type: array
+          - type: 'null'
+          title: Scenes
+        voice:
+          type: string
+          title: Voice
+          default: en-IN-female
+        aspect_ratios:
+          items:
+            type: string
+            enum:
+            - '16:9'
+            - '9:16'
+            - '1:1'
+          type: array
+          title: Aspect Ratios
+        style:
+          type: string
+          title: Style
+          default: bright, modern, real-world footage
+        avoid:
+          items:
+            type: string
+          type: array
+          title: Avoid
+        captions:
+          $ref: '#/components/schemas/CaptionOptions'
+        callback_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Callback Url
+        seed:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Seed
+      additionalProperties: false
+      type: object
+      title: CreateJobRequest
+      description: Provide exactly one of audio_url, script or scenes.
+    ErrorBody:
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+        retryable:
+          type: boolean
+          title: Retryable
+        details:
+          additionalProperties: true
+          type: object
+          title: Details
+          default: {}
+      type: object
+      required:
+      - code
+      - message
+      - retryable
+      title: ErrorBody
+    ErrorResponse:
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+      type: object
+      required:
+      - error
+      title: ErrorResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    JobCreated:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        status:
+          type: string
+          title: Status
+        links:
+          additionalProperties: true
+          type: object
+          title: Links
+      type: object
+      required:
+      - job_id
+      - status
+      - links
+      title: JobCreated
+    JobStatus:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        status:
+          type: string
+          enum:
+          - queued
+          - running
+          - succeeded
+          - failed
+          title: Status
+        progress:
+          type: integer
+          title: Progress
+        stage:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Stage
+        created_at:
+          type: string
+          title: Created At
+        updated_at:
+          type: string
+          title: Updated At
+        result:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Result
+        error:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Error
+      type: object
+      required:
+      - job_id
+      - status
+      - progress
+      - created_at
+      - updated_at
+      title: JobStatus
+    SceneIn:
+      properties:
+        text:
+          type: string
+          title: Text
+        visual_hint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Visual Hint
+      additionalProperties: false
+      type: object
+      required:
+      - text
+      title: SceneIn
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

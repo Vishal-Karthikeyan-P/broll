@@ -1,0 +1,16 @@
+{
+  "scenes": [
+    {
+      "text": "Meet the new way to make videos.",
+      "visual_hint": "creator editing video"
+    },
+    {
+      "text": "It works in minutes, not hours.",
+      "visual_hint": "stopwatch"
+    }
+  ],
+  "aspect_ratios": [
+    "16:9",
+    "1:1"
+  ]
+}
